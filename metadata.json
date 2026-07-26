@@ -1,0 +1,6 @@
+{
+  "name": "Academy LMS - Modern Learning Management System",
+  "description": "Comprehensive full-stack LMS with course catalog, interactive timetable, role-based profiles, Express backend API routes, and database schemas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
