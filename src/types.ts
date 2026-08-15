@@ -131,3 +131,34 @@ export interface ApiRouteDoc {
   requestBody?: string;
   responseExample: string;
 }
+
+export interface StudentRecord {
+  id: string;
+  name: string;
+  gradeLevel: string;
+  parentName: string;
+  parentEmail: string;
+}
+
+export interface ParsedTestCommand {
+  raw: string;
+  student: StudentRecord | null;
+  score: number | null;
+  maxScore: number;
+  subject: string | null;
+  ambiguous: boolean;
+  error?: string;
+}
+
+export interface TestDispatchRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  parentEmail: string;
+  subject: string;
+  score: number;
+  maxScore: number;
+  dispatchedAt: string;
+  dispatchedBy: string;
+  status: 'sent' | 'failed';
+}

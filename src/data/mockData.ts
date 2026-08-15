@@ -1,4 +1,11 @@
-import { Course, TimetableSlot, UserProfile, Announcement, SchemaDoc, ApiRouteDoc, AnalyticsSummary } from '../types';
+import { Course, TimetableSlot, UserProfile, Announcement, SchemaDoc, ApiRouteDoc, AnalyticsSummary, StudentRecord } from '../types';
+
+// Demo roster used by the Teacher Test Result Dispatcher. Parent emails are
+// placeholder example.com addresses only — this demo never sends real mail.
+export const studentRoster: StudentRecord[] = [
+  { id: '12345', name: 'Ali', gradeLevel: 'Grade 10', parentName: 'Ahmed', parentEmail: 'ahmed.parent@example.com' },
+  { id: '67890', name: 'Fatima', gradeLevel: 'Grade 10', parentName: 'Zainab', parentEmail: 'zainab.parent@example.com' }
+];
 
 export const initialProfiles: Record<string, UserProfile> = {
   student: {

@@ -7,6 +7,7 @@ import { TimetableScheduleView } from './components/TimetableScheduleView';
 import { ProfileOverviewView } from './components/ProfileOverviewView';
 import { ArchitectureDocsView } from './components/ArchitectureDocsView';
 import { AiTutorDrawer } from './components/AiTutorDrawer';
+import { TeacherTestDispatcherDrawer } from './components/TeacherTestDispatcherDrawer';
 
 import { Course, TimetableSlot, UserProfile, UserRole, Announcement, SchemaDoc, ApiRouteDoc } from './types';
 import { initialProfiles, initialCourses, initialTimetable, initialAnnouncements, schemaDocs, apiRoutesDocs } from './data/mockData';
@@ -23,6 +24,7 @@ export default function App() {
   
   const [selectedCourseModal, setSelectedCourseModal] = useState<Course | null>(null);
   const [isAiTutorOpen, setIsAiTutorOpen] = useState<boolean>(false);
+  const [isTestDispatcherOpen, setIsTestDispatcherOpen] = useState<boolean>(false);
 
   // Fetch initial data from Express REST backend
   useEffect(() => {
@@ -206,6 +208,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenAiTutor={() => setIsAiTutorOpen(true)}
+        onOpenTestDispatcher={() => setIsTestDispatcherOpen(true)}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
@@ -282,6 +285,14 @@ export default function App() {
         isOpen={isAiTutorOpen}
         onClose={() => setIsAiTutorOpen(false)}
       />
+
+      {/* Teacher Test Result Dispatcher Drawer (staff only) */}
+      {(currentRole === 'teacher' || currentRole === 'admin') && (
+        <TeacherTestDispatcherDrawer
+          isOpen={isTestDispatcherOpen}
+          onClose={() => setIsTestDispatcherOpen(false)}
+        />
+      )}
 
     </div>
   );
