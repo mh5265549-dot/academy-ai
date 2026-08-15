@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, Search, Bell, Sparkles, User, Shield, Check, BookOpen, Layers } from 'lucide-react';
+import { GraduationCap, Search, Bell, Sparkles, User, Shield, Check, BookOpen, Layers, ClipboardCheck } from 'lucide-react';
 import { UserProfile, UserRole } from '../types';
 
 interface NavbarProps {
@@ -9,6 +9,7 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onOpenAiTutor: () => void;
+  onOpenTestDispatcher: () => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   onSearchChange,
   onOpenAiTutor,
+  onOpenTestDispatcher,
   activeTab,
   onTabChange
 }) => {
@@ -87,6 +89,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">AI Study Assistant</span>
             <span className="sm:hidden">AI Assistant</span>
           </button>
+
+          {/* Teacher Test Result Dispatcher Trigger (staff only) */}
+          {(currentRole === 'teacher' || currentRole === 'admin') && (
+            <button
+              onClick={onOpenTestDispatcher}
+              className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-slate-900 text-white font-medium text-xs sm:text-sm shadow-sm hover:shadow-md hover:opacity-95 transition-all"
+              title="Dispatch test results to parents"
+            >
+              <ClipboardCheck className="w-4 h-4 text-emerald-200" />
+              <span>Test Result Dispatcher</span>
+            </button>
+          )}
 
           {/* Notifications */}
           <div className="relative">

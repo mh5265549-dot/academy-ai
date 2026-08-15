@@ -2,8 +2,8 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { initialProfiles, initialCourses, initialTimetable, initialAnnouncements, schemaDocs, apiRoutesDocs } from './src/data/mockData';
-import { Course, TimetableSlot, UserProfile } from './src/types';
+import { initialProfiles, initialCourses, initialTimetable, initialAnnouncements, schemaDocs, apiRoutesDocs, studentRoster } from './src/data/mockData';
+import { Course, TimetableSlot, UserProfile, StudentRecord, TestDispatchRecord, ParsedTestCommand } from './src/types';
 
 async function startServer() {
   const app = express();
@@ -16,6 +16,16 @@ async function startServer() {
   let currentCourses: Course[] = JSON.parse(JSON.stringify(initialCourses));
   let currentTimetable: TimetableSlot[] = JSON.parse(JSON.stringify(initialTimetable));
   let currentActiveRole: 'student' | 'teacher' | 'admin' = 'student';
+  const roster: StudentRecord[] = JSON.parse(JSON.stringify(studentRoster));
+  let dispatchLog: TestDispatchRecord[] = [];
+
+  function requireStaffRole(res: express.Response): boolean {
+    if (currentActiveRole !== 'teacher' && currentActiveRole !== 'admin') {
+      res.status(403).json({ success: false, error: 'Only authenticated teachers or admins may access the test result dispatcher.' });
+      return false;
+    }
+    return true;
+  }
 
   // Lazy Gemini client helper
   let aiClient: GoogleGenAI | null = null;
@@ -249,6 +259,125 @@ async function startServer() {
         topSubject: 'Computer Science & STEM'
       }
     });
+  });
+
+  // Teacher Test Result Dispatcher — roster lookup (staff only)
+  app.get('/api/teacher/roster', (_req, res) => {
+    if (!requireStaffRole(res)) return;
+    res.json({ success: true, roster });
+  });
+
+  // Parse a free-text teacher command into a candidate student + score.
+  // This ONLY extracts a proposal for the teacher to review — it never
+  // sends anything by itself. Dispatch requires a separate, explicit call.
+  app.post('/api/teacher/test-results/parse', (req, res) => {
+    if (!requireStaffRole(res)) return;
+
+    const { command } = req.body as { command?: string };
+    if (!command || !command.trim()) {
+      return res.status(400).json({ success: false, error: 'A command or note describing the test result is required.' });
+    }
+
+    // Match each digit run in the command against real roster IDs, rather than
+    // grabbing "the first number", so an ID like 12345 can't be misread as a
+    // fragment of a score (e.g. "123" + "45").
+    const numberTokens = Array.from(command.matchAll(/\d+(?:\s*\/\s*\d+)?/g)).map(m => m[0]);
+    let student: StudentRecord | null = null;
+    let idTokenIndex = -1;
+    let attemptedId: string | null = null;
+    numberTokens.forEach((tok, i) => {
+      if (tok.includes('/')) return;
+      const plain = tok.trim();
+      const match = roster.find(s => s.id === plain);
+      if (match && !student) {
+        student = match;
+        idTokenIndex = i;
+      } else if (!student && !attemptedId && plain.length >= 3) {
+        attemptedId = plain;
+      }
+    });
+
+    // Score: prefer an explicit N/M fraction or N%, then fall back to the one
+    // remaining standalone number that isn't the student ID token.
+    let score: number | null = null;
+    let maxScore = 100;
+    const fractionMatch = command.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
+    const percentMatch = command.match(/(\d{1,3})\s*%/);
+    if (fractionMatch) {
+      score = parseInt(fractionMatch[1], 10);
+      const m = parseInt(fractionMatch[2], 10);
+      if (m > 0) maxScore = m;
+    } else if (percentMatch) {
+      score = parseInt(percentMatch[1], 10);
+    } else {
+      const candidate = numberTokens.find((tok, i) => i !== idTokenIndex && !tok.includes('/') && parseInt(tok, 10) <= 100);
+      if (candidate) score = parseInt(candidate, 10);
+    }
+
+    const subjectMatch = command.match(/\bin\s+([A-Za-z][A-Za-z\s]{2,30}?)(?:\s+(?:to|for|class)\b|$)/i);
+
+    const result: ParsedTestCommand = {
+      raw: command,
+      student,
+      score,
+      maxScore,
+      subject: subjectMatch ? subjectMatch[1].trim() : null,
+      ambiguous: !student || score === null,
+      error: !student
+        ? (attemptedId ? `No student on the roster matches ID ${attemptedId}.` : 'Could not find a student ID in that command.')
+        : score === null
+          ? 'Could not find a test score in that command.'
+          : undefined
+    };
+
+    res.json({ success: true, parsed: result });
+  });
+
+  // Dispatch a CONFIRMED test result to a parent. In this demo environment
+  // there is no email provider wired up, so this simulates the send and
+  // records it to an in-memory audit log rather than contacting a real inbox.
+  app.post('/api/teacher/test-results/dispatch', (req, res) => {
+    if (!requireStaffRole(res)) return;
+
+    const { studentId, score, maxScore = 100, subject } = req.body as {
+      studentId?: string; score?: number; maxScore?: number; subject?: string;
+    };
+
+    if (!studentId || typeof score !== 'number') {
+      return res.status(400).json({ success: false, error: 'studentId and a numeric score are required to dispatch.' });
+    }
+
+    const student = roster.find(s => s.id === studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, error: `No student on the roster matches ID ${studentId}.` });
+    }
+
+    const record: TestDispatchRecord = {
+      id: `dsp_${Date.now()}`,
+      studentId: student.id,
+      studentName: student.name,
+      parentEmail: student.parentEmail,
+      subject: subject || 'General',
+      score,
+      maxScore,
+      dispatchedAt: new Date().toISOString(),
+      dispatchedBy: currentProfiles.teacher.name,
+      status: 'sent'
+    };
+
+    dispatchLog.unshift(record);
+    console.log(`[DEMO SIMULATED DISPATCH] Would email ${student.parentEmail} (parent of ${student.name}): score ${score}/${maxScore} in ${record.subject}. No real email was sent — no email provider is configured in this demo.`);
+
+    res.json({
+      success: true,
+      message: `Simulated dispatch recorded for ${student.name}'s parent (${student.parentEmail}). This demo does not send real email.`,
+      record
+    });
+  });
+
+  app.get('/api/teacher/test-results/log', (_req, res) => {
+    if (!requireStaffRole(res)) return;
+    res.json({ success: true, log: dispatchLog });
   });
 
   // AI Tutor / Study Assistant using Google GenAI SDK or fallback
