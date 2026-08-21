@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, BookOpen, Calendar, UserCheck, Terminal, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, UserCheck, Terminal, HelpCircle, Footprints } from 'lucide-react';
 import { UserRole } from '../types';
 
 interface SidebarProps {
@@ -20,7 +20,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'courses', label: 'Course Catalog', icon: BookOpen, badge: enrolledCount > 0 ? `${enrolledCount}` : undefined },
     { id: 'timetable', label: 'Schedule', icon: Calendar },
     { id: 'profile', label: 'Profile', icon: UserCheck },
-    { id: 'docs', label: 'Architecture & API', icon: Terminal, highlight: true }
+    { id: 'journey', label: 'Journey Game', icon: Footprints, highlight: true },
+    { id: 'docs', label: 'Architecture & API', icon: Terminal }
   ];
 
   return (

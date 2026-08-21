@@ -7,6 +7,7 @@ import { TimetableScheduleView } from './components/TimetableScheduleView';
 import { ProfileOverviewView } from './components/ProfileOverviewView';
 import { ArchitectureDocsView } from './components/ArchitectureDocsView';
 import { AiTutorDrawer } from './components/AiTutorDrawer';
+import { JourneyGameView } from './components/JourneyGameView';
 
 import { Course, TimetableSlot, UserProfile, UserRole, Announcement, SchemaDoc, ApiRouteDoc } from './types';
 import { initialProfiles, initialCourses, initialTimetable, initialAnnouncements, schemaDocs, apiRoutesDocs } from './data/mockData';
@@ -266,6 +267,8 @@ export default function App() {
               onPostAnnouncement={handlePostAnnouncement}
             />
           )}
+
+          {activeTab === 'journey' && <JourneyGameView />}
 
           {activeTab === 'docs' && (
             <ArchitectureDocsView
