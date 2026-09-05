@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>High-Gen Runner</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="game-wrap">
+      <canvas id="game" width="900" height="360"></canvas>
+
+      <div id="hud">
+        <div id="score">SCORE 0</div>
+        <div id="gen">GEN 1</div>
+        <div id="best">BEST 0</div>
+      </div>
+
+      <div id="overlay" class="show">
+        <h1>HIGH-GEN <span>RUNNER</span></h1>
+        <p>Survive the run. Every generation gets faster, denser, and stranger.</p>
+        <p class="controls">
+          <span><kbd>Space</kbd> / <kbd>↑</kbd> Jump</span>
+          <span><kbd>↓</kbd> Duck</span>
+          <span class="mobile-hint">Tap top half to jump, hold bottom half to duck</span>
+        </p>
+        <button id="start-btn">Start Run</button>
+      </div>
+
+      <div id="gameover" class="hidden">
+        <h2>Run Ended</h2>
+        <p id="final-stats"></p>
+        <button id="retry-btn">Run Again</button>
+      </div>
+
+      <div id="gen-banner" class="hidden"></div>
+
+      <div id="touch-controls">
+        <button id="btn-duck" aria-label="Duck">▼ Duck</button>
+        <button id="btn-jump" aria-label="Jump">▲ Jump</button>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
