@@ -19,6 +19,7 @@
   const genBanner = document.getElementById("gen-banner");
   const btnJump = document.getElementById("btn-jump");
   const btnDuck = document.getElementById("btn-duck");
+  const cabinet = document.getElementById("cabinet");
 
   const STORAGE_KEY = "highGenRunner.best";
   const GEN_SCORE_STEP = 500; // score needed per generation bump
@@ -38,6 +39,10 @@
 
   function paletteFor(gen) {
     return PALETTES[(gen - 1) % PALETTES.length];
+  }
+
+  function syncCabinetGlow(g) {
+    cabinet.style.setProperty("--accent-live", paletteFor(g).accent);
   }
 
   let state = "idle"; // idle | running | over
@@ -68,6 +73,7 @@
     elapsed = 0;
     best = Number(localStorage.getItem(STORAGE_KEY) || 0);
     bestEl.textContent = "BEST " + best;
+    syncCabinetGlow(gen);
     updateHud();
   }
 
@@ -119,6 +125,7 @@
     if (targetGen > gen) {
       gen = targetGen;
       speed = BASE_SPEED + (gen - 1) * SPEED_PER_GEN;
+      syncCabinetGlow(gen);
       announceGen(gen);
     }
   }
