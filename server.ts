@@ -7,7 +7,7 @@ import { Course, TimetableSlot, UserProfile } from './src/types';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
 
